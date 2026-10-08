@@ -3,7 +3,7 @@ const path = require('path');
 const fetch = require('node-fetch');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // Cache to avoid hitting upstream APIs too frequently
 let cache = {
@@ -14,6 +14,21 @@ let cache = {
 };
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Helper: fetch with timeout using AbortController
+function fetchWithTimeout(url, ms) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), ms);
+  return fetch(url, { signal: controller.signal })
+    .then(resp => {
+      clearTimeout(timeout);
+      return resp;
+    })
+    .catch(err => {
+      clearTimeout(timeout);
+      throw err;
+    });
+}
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -27,14 +42,17 @@ app.get('/api/pakistan/latest', async (req, res) => {
     }
 
     // Fetch OGRA prices from oilprices.pk
-    const resp = await fetch('https://oilprices.pk/api/latest', { timeout: 10000 });
+    const resp = await fetchWithTimeout('https://oilprices.pk/api/latest', 10000);
     const data = await resp.json();
 
     // Also fetch Hi-Octane from trackmate (PSO scraped)
     try {
-      const tmResp = await fetch('https://fuel.trackmate.page/api/prices', { timeout: 10000 });
+      console.log('Fetching Hi-Octane from trackmate...');
+      const tmResp = await fetchWithTimeout('https://fuel.trackmate.page/api/prices', 10000);
       const tmData = await tmResp.json();
+      console.log('Trackmate response received, prices count:', (tmData.prices || []).length);
       const octanePrices = (tmData.prices || []).filter(p => p.product === 'octane_plus' && p.source === 'pso');
+      console.log('Octane prices found:', octanePrices.length);
       if (octanePrices.length > 0) {
         // All cities have the same price; take the first
         data.products.push({
@@ -43,6 +61,7 @@ app.get('/api/pakistan/latest', async (req, res) => {
           unit: octanePrices[0].unit || 'litre',
           source: 'pso'
         });
+        console.log('Hi-Octane added:', octanePrices[0].price_pkr);
       }
     } catch (tmErr) {
       console.error('Trackmate fetch error:', tmErr.message);
@@ -66,11 +85,11 @@ app.get('/api/pakistan/history', async (req, res) => {
     }
 
     // Fetch all petrol history
-    const resp = await fetch('https://oilprices.pk/api/price-history?product=Petrol&limit=5000', { timeout: 15000 });
+    const resp = await fetchWithTimeout('https://oilprices.pk/api/price-history?product=Petrol&limit=5000', 15000);
     const petrolData = await resp.json();
 
     // Also fetch diesel
-    const resp2 = await fetch('https://oilprices.pk/api/price-history?product=Diesel&limit=5000', { timeout: 15000 });
+    const resp2 = await fetchWithTimeout('https://oilprices.pk/api/price-history?product=Diesel&limit=5000', 15000);
     const dieselData = await resp2.json();
 
     const data = { petrol: petrolData, diesel: dieselData };
@@ -91,7 +110,7 @@ app.get('/api/pakistan/long-history', async (req, res) => {
       return res.json(cache.eklitreHistory.data);
     }
 
-    const resp = await fetch('https://eklitre.pk/data/notified-prices.json', { timeout: 15000 });
+    const resp = await fetchWithTimeout('https://eklitre.pk/data/notified-prices.json', 15000);
     const raw = await resp.json();
     const notifs = raw.notifications || [];
 
@@ -119,7 +138,7 @@ app.get('/api/global/history', async (req, res) => {
       return res.json(cache.globalHistory.data);
     }
 
-    const resp = await fetch('https://worldoilmonitor.com/download.php?dataset=history&format=json', { timeout: 15000 });
+    const resp = await fetchWithTimeout('https://worldoilmonitor.com/download.php?dataset=history&format=json', 15000);
     const data = await resp.json();
     cache.globalHistory = { data, time: now };
     res.json(data);
