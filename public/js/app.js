@@ -79,30 +79,59 @@ function initRangeButtons() {
 // ===== Data Loading =====
 async function loadAllData() {
   try {
-    const [latestRes, historyRes, longHistoryRes, globalRes] = await Promise.all([
+    // Use allSettled so one failed API doesn't kill the whole refresh
+    const [latestResult, historyResult, longHistoryResult, globalResult] = await Promise.allSettled([
       fetch('/api/pakistan/latest').then(r => r.json()),
       fetch('/api/pakistan/history').then(r => r.json()),
       fetch('/api/pakistan/long-history').then(r => r.json()),
       fetch('/api/global/history').then(r => r.json())
     ]);
 
-    latestData = latestRes;
-    pakistanHistoryData = historyRes;
-    longHistoryData = longHistoryRes;
-    globalHistoryData = globalRes;
+    // Only update data from successful fetches; keep old data for failed ones
+    if (latestResult.status === 'fulfilled') {
+      latestData = latestResult.value;
+      renderPriceCards(latestResult.value);
+      renderHiOctaneCards(latestResult.value);
+    }
+    if (historyResult.status === 'fulfilled') {
+      pakistanHistoryData = historyResult.value;
+    }
+    if (longHistoryResult.status === 'fulfilled') {
+      longHistoryData = longHistoryResult.value;
+      renderYearlyAnalysis(longHistoryResult.value);
+    }
+    if (globalResult.status === 'fulfilled') {
+      globalHistoryData = globalResult.value;
+    }
 
-    renderPriceCards(latestRes);
-    renderHiOctaneCards(latestRes);
-    renderStatsBar(latestRes, longHistoryRes, globalRes);
-    renderYearlyAnalysis(longHistoryRes);
-    initPakistanChart();
-    initGlobalChart();
-    initComparisonChart(longHistoryRes, globalRes);
-    initYearlyChart(longHistoryRes);
+    // Only re-render charts/sections that have their data available
+    if (latestData && longHistoryData && globalHistoryData) {
+      renderStatsBar(latestData, longHistoryData, globalHistoryData);
+    }
+    if (pakistanHistoryData) {
+      initPakistanChart();
+    }
+    if (globalHistoryData) {
+      initGlobalChart();
+    }
+    if (longHistoryData && globalHistoryData) {
+      initComparisonChart(longHistoryData, globalHistoryData);
+      initYearlyChart(longHistoryData);
+    }
+
+    // If everything failed and we have no data at all, show error
+    if (!latestData && latestResult.status === 'rejected') {
+      showError();
+    }
+
     updateLastUpdated();
   } catch (err) {
     console.error('Failed to load data:', err);
-    showError();
+    // Don't overwrite existing valid data on refresh failure
+    if (!latestData) {
+      showError();
+    }
+    updateLastUpdated();
   }
 }
 
@@ -579,62 +608,52 @@ function initYearlyChart(longHistory) {
     }
   }
   
-  yearlyChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: 'Pakistan Petrol (%)',
-          data: pkChanges,
-          backgroundColor: pkChanges.map(v => parseFloat(v) >= 0 ? hexToRgba(COLORS.petrol, 0.7) : hexToRgba(COLORS.success, 0.7)),
-          borderColor: pkChanges.map(v => parseFloat(v) >= 0 ? COLORS.petrol : COLORS.success),
-          borderWidth: 2,
-          borderRadius: 8,
-          barPercentage: 0.6
-        },
-        {
-          label: 'Global Brent Crude (%)',
-          data: globalChanges,
-          backgroundColor: globalChanges.map(v => v === null ? 'transparent' : (parseFloat(v) >= 0 ? hexToRgba(COLORS.brent, 0.7) : hexToRgba(COLORS.success, 0.7))),
-          borderColor: globalChanges.map(v => v === null ? 'transparent' : (parseFloat(v) >= 0 ? COLORS.brent : COLORS.success)),
-          borderWidth: 2,
-          borderRadius: 8,
-          barPercentage: 0.6
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'top',
-          align: 'end'
-        },
-        tooltip: getTooltipConfig()
+  const yearlyData = {
+    labels: labels,
+    datasets: [
+      {
+        label: 'Pakistan Petrol (%)',
+        data: pkChanges,
+        backgroundColor: pkChanges.map(v => parseFloat(v) >= 0 ? hexToRgba(COLORS.petrol, 0.7) : hexToRgba(COLORS.success, 0.7)),
+        borderColor: pkChanges.map(v => parseFloat(v) >= 0 ? COLORS.petrol : COLORS.success),
+        borderWidth: 2,
+        borderRadius: 8,
+        barPercentage: 0.6
       },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: { color: COLORS.text, font: { size: 13, weight: '600' } }
-        },
-        y: {
-          grid: { color: COLORS.grid },
-          ticks: {
-            color: COLORS.text,
-            callback: v => v + '%'
-          },
-          title: {
-            display: true,
-            text: 'Price Change (%)',
-            color: COLORS.text,
-            font: { size: 11 }
-          }
-        }
+      {
+        label: 'Global Brent Crude (%)',
+        data: globalChanges,
+        backgroundColor: globalChanges.map(v => v === null ? 'transparent' : (parseFloat(v) >= 0 ? hexToRgba(COLORS.brent, 0.7) : hexToRgba(COLORS.success, 0.7))),
+        borderColor: globalChanges.map(v => v === null ? 'transparent' : (parseFloat(v) >= 0 ? COLORS.brent : COLORS.success)),
+        borderWidth: 2,
+        borderRadius: 8,
+        barPercentage: 0.6
+      }
+    ]
+  };
+  const yearlyOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', align: 'end' },
+      tooltip: getTooltipConfig()
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: COLORS.text, font: { size: 13, weight: '600' } } },
+      y: {
+        grid: { color: COLORS.grid },
+        ticks: { color: COLORS.text, callback: v => v + '%' },
+        title: { display: true, text: 'Price Change (%)', color: COLORS.text, font: { size: 11 } }
       }
     }
-  });
+  };
+  if (yearlyChart) {
+    yearlyChart.data = yearlyData;
+    yearlyChart.options = yearlyOpts;
+    yearlyChart.update('none');
+  } else {
+    yearlyChart = new Chart(ctx, { type: 'bar', data: yearlyData, options: yearlyOpts });
+  }
 }
 
 // ===== Helpers =====
