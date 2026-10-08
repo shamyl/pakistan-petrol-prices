@@ -30,10 +30,96 @@ function fetchWithTimeout(url, ms) {
     });
 }
 
+// Helper: scrape PSO Octane Euro 5 prices from psopk.com
+async function scrapePSOOctane() {
+  try {
+    const resp = await fetchWithTimeout('https://psopk.com/en/fuels/fuel-prices', 15000);
+    const html = await resp.text();
+    // The table contains rows like: Octane Euro 5 (Karachi) 410.00
+    const matches = [...html.matchAll(/Octane\s*Euro\s*5\s*\(([^)]+)\)\s*<\/td>\s*<td[^>]*>\s*([\d.]+)/gi)];
+    const cityPrices = {};
+    for (const m of matches) {
+      cityPrices[m[1].trim()] = parseFloat(m[2]);
+    }
+    // Get the effective date from the page
+    const dateMatch = html.match(/Effective\s*(?:Date|Rate)?\s*[:]*\s*(\d{1,2}\s+\w+\s+202\d)/i);
+    const effectiveDate = dateMatch ? dateMatch[1] : null;
+    
+    // Get the most common price (they're usually all the same)
+    const prices = Object.values(cityPrices);
+    const priceCounts = {};
+    for (const p of prices) {
+      priceCounts[p] = (priceCounts[p] || 0) + 1;
+    }
+    const mostCommonPrice = Object.entries(priceCounts).sort((a, b) => b[1] - a[1])[0];
+    
+    return {
+      price: mostCommonPrice ? mostCommonPrice[0] : null,
+      cities: cityPrices,
+      effectiveDate
+    };
+  } catch (err) {
+    console.error('PSO scrape error:', err.message);
+    return null;
+  }
+}
+
+// Helper: scrape APL XTRON (Hi-Octane) prices from apl.com.pk
+async function scrapeAPLXtron() {
+  try {
+    const resp = await fetchWithTimeout('https://www.apl.com.pk/locator-data/GasStations.js', 15000);
+    const raw = await resp.text();
+    
+    // Extract the JSON array from "GasStations = [ ... ]"
+    const start = raw.indexOf('[');
+    const end = raw.lastIndexOf(']') + 1;
+    if (start === -1 || end === 0) return null;
+    
+    const jsonStr = raw.slice(start, end);
+    const stations = JSON.parse(jsonStr);
+    
+    // Filter stations with non-zero XTRON price
+    const xtronStations = stations.filter(s => parseFloat(s.XTRONPrice || '0') > 0);
+    
+    // Group by price
+    const priceGroups = {};
+    for (const s of xtronStations) {
+      const price = parseFloat(s.XTRONPrice);
+      if (!priceGroups[price]) {
+        priceGroups[price] = { price, cities: new Set(), count: 0 };
+      }
+      priceGroups[price].cities.add(s.City || 'Unknown');
+      priceGroups[price].count++;
+    }
+    
+    // Get date range
+    const fromDates = new Set();
+    for (const s of xtronStations) {
+      if (s.XTRONFromDate) fromDates.add(s.XTRONFromDate.split(' ')[0]);
+    }
+    
+    // Sort by station count (most common price first)
+    const sortedPrices = Object.values(priceGroups).sort((a, b) => b.count - a.count);
+    
+    return {
+      priceTiers: sortedPrices.map(g => ({
+        price: g.price,
+        stationCount: g.count,
+        cities: [...g.cities].slice(0, 10)
+      })),
+      totalStations: xtronStations.length,
+      effectiveDate: [...fromDates][0] || null
+    };
+  } catch (err) {
+    console.error('APL scrape error:', err.message);
+    return null;
+  }
+}
+
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// API: Latest Pakistan prices (includes Hi-Octane from PSO via trackmate)
+// API: Latest Pakistan prices (includes Hi-Octane from PSO and APL)
 app.get('/api/pakistan/latest', async (req, res) => {
   try {
     const now = Date.now();
@@ -45,26 +131,35 @@ app.get('/api/pakistan/latest', async (req, res) => {
     const resp = await fetchWithTimeout('https://oilprices.pk/api/latest', 10000);
     const data = await resp.json();
 
-    // Also fetch Hi-Octane from trackmate (PSO scraped)
-    try {
-      console.log('Fetching Hi-Octane from trackmate...');
-      const tmResp = await fetchWithTimeout('https://fuel.trackmate.page/api/prices', 10000);
-      const tmData = await tmResp.json();
-      console.log('Trackmate response received, prices count:', (tmData.prices || []).length);
-      const octanePrices = (tmData.prices || []).filter(p => p.product === 'octane_plus' && p.source === 'pso');
-      console.log('Octane prices found:', octanePrices.length);
-      if (octanePrices.length > 0) {
-        // All cities have the same price; take the first
-        data.products.push({
-          product: 'Hi-Octane (PSO Altron XPD)',
-          pricePkr: octanePrices[0].price_pkr,
-          unit: octanePrices[0].unit || 'litre',
-          source: 'pso'
-        });
-        console.log('Hi-Octane added:', octanePrices[0].price_pkr);
-      }
-    } catch (tmErr) {
-      console.error('Trackmate fetch error:', tmErr.message);
+    // Fetch Hi-Octane prices from PSO and APL in parallel
+    const [psoOctane, aplXtron] = await Promise.all([
+      scrapePSOOctane(),
+      scrapeAPLXtron()
+    ]);
+
+    data.hiOctane = {};
+
+    // Add PSO Hi-Octane
+    if (psoOctane && psoOctane.price) {
+      data.hiOctane.pso = {
+        name: 'PSO Octane+ Euro 5',
+        price: psoOctane.price,
+        unit: 'litre',
+        cities: psoOctane.cities,
+        effectiveDate: psoOctane.effectiveDate
+      };
+      console.log('PSO Octane price:', psoOctane.price);
+    }
+
+    // Add APL XTRON
+    if (aplXtron && aplXtron.priceTiers && aplXtron.priceTiers.length > 0) {
+      data.hiOctane.apl = {
+        name: 'Attock XTRON',
+        priceTiers: aplXtron.priceTiers,
+        totalStations: aplXtron.totalStations,
+        effectiveDate: aplXtron.effectiveDate
+      };
+      console.log('APL XTRON prices:', aplXtron.priceTiers.map(t => `Rs${t.price} (${t.count} stations)`).join(', '));
     }
 
     cache.pakistanLatest = { data, time: now };
@@ -84,11 +179,9 @@ app.get('/api/pakistan/history', async (req, res) => {
       return res.json(cache.pakistanHistory.data);
     }
 
-    // Fetch all petrol history
     const resp = await fetchWithTimeout('https://oilprices.pk/api/price-history?product=Petrol&limit=5000', 15000);
     const petrolData = await resp.json();
 
-    // Also fetch diesel
     const resp2 = await fetchWithTimeout('https://oilprices.pk/api/price-history?product=Diesel&limit=5000', 15000);
     const dieselData = await resp2.json();
 
@@ -114,7 +207,6 @@ app.get('/api/pakistan/long-history', async (req, res) => {
     const raw = await resp.json();
     const notifs = raw.notifications || [];
 
-    // Deduplicate by date, keeping the last entry per date
     const byDate = {};
     for (const r of notifs) {
       byDate[r[0]] = { date: r[0], petrol: r[1], diesel: r[2], kerosene: r[3], lightDiesel: r[4] };

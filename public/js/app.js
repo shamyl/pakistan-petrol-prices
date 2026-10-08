@@ -15,7 +15,6 @@ const COLORS = {
   diesel: '#4ecdc4',
   kerosene: '#ffe66d',
   lpg: '#a8e6cf',
-  octane: '#e17055',
   brent: '#6c5ce7',
   wti: '#fd79a8',
   natgas: '#fdcb6e',
@@ -93,6 +92,7 @@ async function loadAllData() {
     globalHistoryData = globalRes;
 
     renderPriceCards(latestRes);
+    renderHiOctaneCards(latestRes);
     renderStatsBar(latestRes, longHistoryRes, globalRes);
     renderYearlyAnalysis(longHistoryRes);
     initPakistanChart();
@@ -112,8 +112,7 @@ function renderPriceCards(data) {
     'Motor Spirit (Petrol)': { id: 'petrol', key: 'petrolPrice', changeId: 'petrolChange' },
     'High Speed Diesel (HSD)': { id: 'diesel', key: 'dieselPrice', changeId: 'dieselChange' },
     'Superior Kerosene Oil (SKO)': { id: 'kerosene', key: 'kerosenePrice', changeId: 'keroseneChange' },
-    'Liquefied Petroleum Gas (LPG)': { id: 'lpg', key: 'lpgPrice', changeId: 'lpgChange' },
-    'Hi-Octane (PSO Altron XPD)': { id: 'octane', key: 'octanePrice', changeId: 'octaneChange' }
+    'Liquefied Petroleum Gas (LPG)': { id: 'lpg', key: 'lpgPrice', changeId: 'lpgChange' }
   };
 
   data.products.forEach(p => {
@@ -142,7 +141,7 @@ function renderPriceCards(data) {
           el.className = 'card-change flat';
         }
       }
-    } else if (meta.id === 'lpg' || meta.id === 'octane') {
+    } else if (meta.id === 'lpg') {
       const el = document.getElementById(meta.changeId);
       el.textContent = '—';
       el.className = 'card-change flat';
@@ -150,6 +149,71 @@ function renderPriceCards(data) {
   });
 
   document.getElementById('effectiveDate').textContent = formatDate(data.effectiveDate);
+}
+
+// ===== Hi-Octane Cards (by company) =====
+function renderHiOctaneCards(data) {
+  const container = document.getElementById('hiOctaneCards');
+  if (!data.hiOctane) {
+    container.innerHTML = '<div class="octane-loading">Hi-Octane prices unavailable</div>';
+    return;
+  }
+
+  let html = '';
+
+  // PSO
+  if (data.hiOctane.pso) {
+    const pso = data.hiOctane.pso;
+    const cityCount = Object.keys(pso.cities || {}).length;
+    html += `
+      <div class="octane-company-card" data-company="pso">
+        <div class="octane-company-name">PSO Octane+ Euro 5</div>
+        <div class="octane-price-main">Rs ${parseFloat(pso.price).toFixed(2)}</div>
+        <div class="octane-price-unit">PKR / litre · ${cityCount} cities</div>
+        ${pso.effectiveDate ? `<div class="octane-effective">Effective: ${pso.effectiveDate}</div>` : ''}
+        <div class="octane-note">Same price across all PSO stations nationwide.</div>
+      </div>
+    `;
+  }
+
+  // APL
+  if (data.hiOctane.apl) {
+    const apl = data.hiOctane.apl;
+    const tiers = apl.priceTiers || [];
+    html += `
+      <div class="octane-company-card" data-company="apl">
+        <div class="octane-company-name">Attock XTRON</div>
+    `;
+    if (tiers.length === 1) {
+      html += `
+        <div class="octane-price-main">Rs ${tiers[0].price.toFixed(2)}</div>
+        <div class="octane-price-unit">PKR / litre · ${tiers[0].stationCount} stations</div>
+      `;
+    } else {
+      html += `<div class="octane-price-main">Rs ${tiers[0].price.toFixed(2)}</div>`;
+      html += `<div class="octane-price-unit">PKR / litre · from ${tiers[tiers.length-1].price.toFixed(2)}</div>`;
+      html += '<div class="octane-price-tiers">';
+      for (const t of tiers) {
+        html += `
+          <div class="octane-tier">
+            <span class="octane-tier-price">Rs ${t.price.toFixed(2)}</span>
+            <span class="octane-tier-info">${t.stationCount} stations · ${t.cities.slice(0,3).join(', ')}${t.cities.length > 3 ? '…' : ''}</span>
+          </div>
+        `;
+      }
+      html += '</div>';
+    }
+    html += apl.effectiveDate ? `<div class="octane-effective">Effective: ${apl.effectiveDate}</div>` : '';
+    html += `<div class="octane-note">Price varies by region. ${apl.totalStations} stations sell XTRON nationwide.</div>`;
+    html += '</div>';
+  }
+
+  // If neither available
+  if (!data.hiOctane.pso && !data.hiOctane.apl) {
+    html = '<div class="octane-loading">Unable to fetch Hi-Octane prices from PSO or APL.</div>';
+  }
+
+  container.innerHTML = html;
 }
 
 // ===== Stats Bar =====

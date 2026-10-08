@@ -64,12 +64,15 @@
         <div class="card-unit">PKR / kg</div>
         <div class="card-change" id="lpgChange">—</div>
       </div>
-      <div class="price-card" data-product="octane">
-        <div class="card-icon">🏎️</div>
-        <div class="card-label">Hi-Octane (Altron XPD)</div>
-        <div class="card-value" id="octanePrice">—</div>
-        <div class="card-unit">PKR / litre</div>
-        <div class="card-change" id="octaneChange">—</div>
+    </section>
+
+    <!-- Hi-Octane Section (Deregulated - by company) -->
+    <section class="hi-octane-section">
+      <div class="hi-octane-header">
+        <h2>🏎️ Hi-Octane Prices <span class="deregulated-badge">Deregulated — set by each OMC</span></h2>
+      </div>
+      <div class="hi-octane-cards" id="hiOctaneCards">
+        <div class="octane-loading">Loading Hi-Octane prices…</div>
       </div>
     </section>
 
@@ -207,6 +210,14 @@
         <a href="https://www.ogra.org.pk" target="_blank" rel="noopener" class="source-card">
           <div class="source-name">OGRA</div>
           <div class="source-desc">Oil & Gas Regulatory Authority of Pakistan</div>
+        </a>
+        <a href="https://psopk.com/en/fuels/fuel-prices" target="_blank" rel="noopener" class="source-card">
+          <div class="source-name">PSO Fuel Prices</div>
+          <div class="source-desc">PSO Octane+ Euro 5 official rates · Scraped from psopk.com</div>
+        </a>
+        <a href="https://www.apl.com.pk/" target="_blank" rel="noopener" class="source-card">
+          <div class="source-name">Attock Petroleum</div>
+          <div class="source-desc">APL XTRON Hi-Octane prices · Scraped from apl.com.pk</div>
         </a>
         <a href="https://fuel.trackmate.page" target="_blank" rel="noopener" class="source-card">
           <div class="source-name">Trackmate Fuel API</div>
