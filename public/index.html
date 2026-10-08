@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pakistan Petrol Prices — Daily Dashboard</title>
+  <meta name="description" content="Live daily petrol prices in Pakistan with historical charts and global oil price comparisons. Data from OGRA via OilPrices.pk and ekLitre.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛽</text></svg>">
+</head>
+<body>
+  <!-- Animated gradient background -->
+  <div class="bg-gradient"></div>
+  <div class="bg-noise"></div>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo-icon">⛽</div>
+        <div>
+          <h1>Pakistan Petrol Prices</h1>
+          <p class="subtitle">Daily OGRA-notified prices · Updated automatically</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="live-indicator">
+          <span class="live-dot"></span>
+          <span class="live-text">LIVE</span>
+        </div>
+        <div class="last-updated" id="lastUpdated">—</div>
+      </div>
+    </header>
+
+    <!-- Current Price Cards -->
+    <section class="price-cards" id="priceCards">
+      <div class="price-card" data-product="petrol">
+        <div class="card-icon">⛽</div>
+        <div class="card-label">Petrol</div>
+        <div class="card-value" id="petrolPrice">—</div>
+        <div class="card-unit">PKR / litre</div>
+        <div class="card-change" id="petrolChange">—</div>
+      </div>
+      <div class="price-card" data-product="diesel">
+        <div class="card-icon">🚛</div>
+        <div class="card-label">High Speed Diesel</div>
+        <div class="card-value" id="dieselPrice">—</div>
+        <div class="card-unit">PKR / litre</div>
+        <div class="card-change" id="dieselChange">—</div>
+      </div>
+      <div class="price-card" data-product="kerosene">
+        <div class="card-icon">🔥</div>
+        <div class="card-label">Kerosene</div>
+        <div class="card-value" id="kerosenePrice">—</div>
+        <div class="card-unit">PKR / litre</div>
+        <div class="card-change" id="keroseneChange">—</div>
+      </div>
+      <div class="price-card" data-product="lpg">
+        <div class="card-icon">🏠</div>
+        <div class="card-label">LPG</div>
+        <div class="card-value" id="lpgPrice">—</div>
+        <div class="card-unit">PKR / kg</div>
+        <div class="card-change" id="lpgChange">—</div>
+      </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <section class="stats-bar" id="statsBar">
+      <div class="stat-item">
+        <span class="stat-label">Today's Date</span>
+        <span class="stat-value" id="effectiveDate">—</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Petrol 1-Year Change</span>
+        <span class="stat-value" id="oneYearChange">—</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Petrol 5-Year Change</span>
+        <span class="stat-value" id="fiveYearChange">—</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Brent Crude (USD)</span>
+        <span class="stat-value" id="brentPrice">—</span>
+      </div>
+    </section>
+
+    <!-- Chart Navigation Tabs -->
+    <section class="chart-section">
+      <div class="chart-tabs">
+        <button class="tab-btn active" data-tab="pakistan">Pakistan Prices</button>
+        <button class="tab-btn" data-tab="global">Global Oil Prices</button>
+        <button class="tab-btn" data-tab="comparison">PK vs Global</button>
+        <button class="tab-btn" data-tab="yearly">Yearly Analysis</button>
+      </div>
+
+      <!-- Pakistan Prices Tab -->
+      <div class="tab-content active" id="tab-pakistan">
+        <div class="chart-header">
+          <h2>Pakistan Petrol & Diesel Price History</h2>
+          <div class="range-buttons">
+            <button class="range-btn active" data-range="3m">3M</button>
+            <button class="range-btn" data-range="6m">6M</button>
+            <button class="range-btn" data-range="1y">1Y</button>
+            <button class="range-btn" data-range="2y">2Y</button>
+            <button class="range-btn" data-range="5y">5Y</button>
+            <button class="range-btn" data-range="all">All</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="pakistanChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Global Oil Prices Tab -->
+      <div class="tab-content" id="tab-global">
+        <div class="chart-header">
+          <h2>Global Crude Oil Prices (USD/barrel)</h2>
+          <div class="range-buttons">
+            <button class="range-btn active" data-range="1m">1M</button>
+            <button class="range-btn" data-range="3m">3M</button>
+            <button class="range-btn" data-range="6m">6M</button>
+            <button class="range-btn" data-range="1y">1Y</button>
+            <button class="range-btn" data-range="2y">2Y</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="globalChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Comparison Tab -->
+      <div class="tab-content" id="tab-comparison">
+        <div class="chart-header">
+          <h2>Pakistan Petrol vs Global Brent Crude</h2>
+          <p class="chart-subtitle">Normalized to compare trends (index = 100 at start of period)</p>
+        </div>
+        <div class="chart-container">
+          <canvas id="comparisonChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Yearly Analysis Tab -->
+      <div class="tab-content" id="tab-yearly">
+        <div class="chart-header">
+          <h2>Yearly Price Comparison (1–5 Years)</h2>
+          <p class="chart-subtitle">Petrol price change over the last 1, 2, 3, 4, and 5 years</p>
+        </div>
+        <div class="yearly-grid">
+          <div class="yearly-card" data-years="1">
+            <div class="yearly-header">1 Year</div>
+            <div class="yearly-value" id="yearly1Value">—</div>
+            <div class="yearly-detail" id="yearly1Detail">—</div>
+            <div class="yearly-bar"><div class="yearly-bar-fill" id="yearly1Bar"></div></div>
+          </div>
+          <div class="yearly-card" data-years="2">
+            <div class="yearly-header">2 Years</div>
+            <div class="yearly-value" id="yearly2Value">—</div>
+            <div class="yearly-detail" id="yearly2Detail">—</div>
+            <div class="yearly-bar"><div class="yearly-bar-fill" id="yearly2Bar"></div></div>
+          </div>
+          <div class="yearly-card" data-years="3">
+            <div class="yearly-header">3 Years</div>
+            <div class="yearly-value" id="yearly3Value">—</div>
+            <div class="yearly-detail" id="yearly3Detail">—</div>
+            <div class="yearly-bar"><div class="yearly-bar-fill" id="yearly3Bar"></div></div>
+          </div>
+          <div class="yearly-card" data-years="4">
+            <div class="yearly-header">4 Years</div>
+            <div class="yearly-value" id="yearly4Value">—</div>
+            <div class="yearly-detail" id="yearly4Detail">—</div>
+            <div class="yearly-bar"><div class="yearly-bar-fill" id="yearly4Bar"></div></div>
+          </div>
+          <div class="yearly-card" data-years="5">
+            <div class="yearly-header">5 Years</div>
+            <div class="yearly-value" id="yearly5Value">—</div>
+            <div class="yearly-detail" id="yearly5Detail">—</div>
+            <div class="yearly-bar"><div class="yearly-bar-fill" id="yearly5Bar"></div></div>
+          </div>
+        </div>
+        <div class="chart-container" style="margin-top: 24px;">
+          <canvas id="yearlyChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Data Sources -->
+    <section class="data-sources">
+      <h3>Data Sources</h3>
+      <div class="sources-grid">
+        <a href="https://oilprices.pk" target="_blank" rel="noopener" class="source-card">
+          <div class="source-name">OilPrices.pk</div>
+          <div class="source-desc">Real-time OGRA-notified prices · CC BY 4.0</div>
+        </a>
+        <a href="https://eklitre.pk/data/" target="_blank" rel="noopener" class="source-card">
+          <div class="source-name">ekLitre.pk</div>
+          <div class="source-desc">Historical fuel prices since 2006 · CC BY 4.0</div>
+        </a>
+        <a href="https://www.ogra.org.pk" target="_blank" rel="noopener" class="source-card">
+          <div class="source-name">OGRA</div>
+          <div class="source-desc">Oil & Gas Regulatory Authority of Pakistan</div>
+        </a>
+        <a href="https://worldoilmonitor.com" target="_blank" rel="noopener" class="source-card">
+          <div class="source-name">World Oil Monitor</div>
+          <div class="source-desc">Global WTI & Brent crude oil prices · EIA data</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Made by <a href="https://shamylmansoor.com" target="_blank" rel="noopener">ShamylMansoor.com</a></p>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
