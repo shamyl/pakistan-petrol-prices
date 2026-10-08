@@ -18,7 +18,7 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// API: Latest Pakistan prices
+// API: Latest Pakistan prices (includes Hi-Octane from PSO via trackmate)
 app.get('/api/pakistan/latest', async (req, res) => {
   try {
     const now = Date.now();
@@ -26,8 +26,28 @@ app.get('/api/pakistan/latest', async (req, res) => {
       return res.json(cache.pakistanLatest.data);
     }
 
+    // Fetch OGRA prices from oilprices.pk
     const resp = await fetch('https://oilprices.pk/api/latest', { timeout: 10000 });
     const data = await resp.json();
+
+    // Also fetch Hi-Octane from trackmate (PSO scraped)
+    try {
+      const tmResp = await fetch('https://fuel.trackmate.page/api/prices', { timeout: 10000 });
+      const tmData = await tmResp.json();
+      const octanePrices = (tmData.prices || []).filter(p => p.product === 'octane_plus' && p.source === 'pso');
+      if (octanePrices.length > 0) {
+        // All cities have the same price; take the first
+        data.products.push({
+          product: 'Hi-Octane (PSO Altron XPD)',
+          pricePkr: octanePrices[0].price_pkr,
+          unit: octanePrices[0].unit || 'litre',
+          source: 'pso'
+        });
+      }
+    } catch (tmErr) {
+      console.error('Trackmate fetch error:', tmErr.message);
+    }
+
     cache.pakistanLatest = { data, time: now };
     res.json(data);
   } catch (err) {

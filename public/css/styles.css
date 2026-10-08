@@ -154,7 +154,7 @@ body {
 /* ===== Price Cards ===== */
 .price-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -191,6 +191,7 @@ body {
 .price-card[data-product="diesel"] { --card-color: var(--diesel); }
 .price-card[data-product="kerosene"] { --card-color: var(--kerosene); }
 .price-card[data-product="lpg"] { --card-color: var(--lpg); }
+.price-card[data-product="octane"] { --card-color: #e17055; }
 
 .card-icon {
   font-size: 1.8rem;
@@ -440,7 +441,7 @@ body {
 
 .sources-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
 }
 
@@ -494,7 +495,7 @@ body {
 
 /* ===== Responsive ===== */
 @media (max-width: 900px) {
-  .price-cards { grid-template-columns: repeat(2, 1fr); }
+  .price-cards { grid-template-columns: repeat(3, 1fr); }
   .sources-grid { grid-template-columns: repeat(2, 1fr); }
   .yearly-grid { grid-template-columns: repeat(3, 1fr); }
   .stats-bar { flex-direction: column; }

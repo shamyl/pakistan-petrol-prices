@@ -15,6 +15,7 @@ const COLORS = {
   diesel: '#4ecdc4',
   kerosene: '#ffe66d',
   lpg: '#a8e6cf',
+  octane: '#e17055',
   brent: '#6c5ce7',
   wti: '#fd79a8',
   natgas: '#fdcb6e',
@@ -111,7 +112,8 @@ function renderPriceCards(data) {
     'Motor Spirit (Petrol)': { id: 'petrol', key: 'petrolPrice', changeId: 'petrolChange' },
     'High Speed Diesel (HSD)': { id: 'diesel', key: 'dieselPrice', changeId: 'dieselChange' },
     'Superior Kerosene Oil (SKO)': { id: 'kerosene', key: 'kerosenePrice', changeId: 'keroseneChange' },
-    'Liquefied Petroleum Gas (LPG)': { id: 'lpg', key: 'lpgPrice', changeId: 'lpgChange' }
+    'Liquefied Petroleum Gas (LPG)': { id: 'lpg', key: 'lpgPrice', changeId: 'lpgChange' },
+    'Hi-Octane (PSO Altron XPD)': { id: 'octane', key: 'octanePrice', changeId: 'octaneChange' }
   };
 
   data.products.forEach(p => {
@@ -140,9 +142,10 @@ function renderPriceCards(data) {
           el.className = 'card-change flat';
         }
       }
-    } else if (meta.id === 'lpg') {
-      document.getElementById(meta.changeId).textContent = '—';
-      document.getElementById(meta.changeId).className = 'card-change flat';
+    } else if (meta.id === 'lpg' || meta.id === 'octane') {
+      const el = document.getElementById(meta.changeId);
+      el.textContent = '—';
+      el.className = 'card-change flat';
     }
   });
 
