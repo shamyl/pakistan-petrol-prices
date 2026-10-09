@@ -756,7 +756,18 @@ function hexToRgba(hex, alpha) {
 function updateLastUpdated() {
   const el = document.getElementById('lastUpdated');
   const now = new Date();
-  el.textContent = 'Updated ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + ' PKT';
+  // Force PKT (UTC+5) regardless of visitor's timezone
+  const pktTime = now.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Karachi'
+  });
+  const pktDate = now.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'Asia/Karachi'
+  });
+  el.textContent = 'Updated ' + pktDate + ' ' + pktTime + ' PKT';
 }
 
 function showError() {
