@@ -588,6 +588,14 @@ body {
   font-style: italic;
 }
 
+.pm-copyright {
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  margin-top: 10px;
+  opacity: 0.7;
+}
+
 /* ===== Stats Bar ===== */
 .stats-bar {
   display: flex;
