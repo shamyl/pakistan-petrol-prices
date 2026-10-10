@@ -152,40 +152,34 @@ function renderPriceCards(data) {
     if (!meta) return;
     document.getElementById(meta.key).textContent = p.pricePkr.toFixed(2);
 
-    // Calculate change from history
-    const histKey = meta.id === 'petrol' ? 'petrol' : meta.id === 'diesel' ? 'diesel' : meta.id === 'kerosene' ? 'kerosene' : null;
-    if (histKey && pakistanHistoryData && pakistanHistoryData[histKey]) {
-      const hist = pakistanHistoryData[histKey];
-      if (hist.length >= 2) {
-        const prev = hist[hist.length - 2];
-        const curr = hist[hist.length - 1];
-        const change = curr.pricePkr - prev.pricePkr;
-        const pct = ((change / prev.pricePkr) * 100).toFixed(2);
-        const el = document.getElementById(meta.changeId);
-        const arrowEl = document.getElementById(meta.arrowId);
-        if (change > 0) {
-          el.textContent = `▲ +${change.toFixed(2)} (${pct}%)`;
-          el.className = 'card-change up';
-          arrowEl.innerHTML = '▲';
-          arrowEl.className = 'card-arrow up';
-          allChanges.push({ product: meta.id, name: p.product, change, pct, prev: prev.pricePkr, curr: curr.pricePkr });
-        } else if (change < 0) {
-          el.textContent = `▼ ${change.toFixed(2)} (${pct}%)`;
-          el.className = 'card-change down';
-          arrowEl.innerHTML = '▼';
-          arrowEl.className = 'card-arrow down';
-          allChanges.push({ product: meta.id, name: p.product, change, pct, prev: prev.pricePkr, curr: curr.pricePkr });
-        } else {
-          el.textContent = '— No change';
-          el.className = 'card-change flat';
-          arrowEl.innerHTML = '—';
-          arrowEl.className = 'card-arrow flat';
-          allChanges.push({ product: meta.id, name: p.product, change: 0, pct: 0, prev: prev.pricePkr, curr: curr.pricePkr });
-        }
+    const el = document.getElementById(meta.changeId);
+    const arrowEl = document.getElementById(meta.arrowId);
+
+    // Use previousPrice/change from API response directly (no race condition)
+    if (p.previousPrice != null && p.change != null) {
+      const change = p.change;
+      const pct = p.changePct != null ? p.changePct.toFixed(2) : '0.00';
+      if (change > 0) {
+        el.textContent = `▲ +${change.toFixed(2)} (${pct}%)`;
+        el.className = 'card-change up';
+        arrowEl.innerHTML = '▲';
+        arrowEl.className = 'card-arrow up';
+        allChanges.push({ product: meta.id, name: p.product, change, pct: parseFloat(pct), prev: p.previousPrice, curr: p.pricePkr, prevDate: p.previousDate });
+      } else if (change < 0) {
+        el.textContent = `▼ ${change.toFixed(2)} (${pct}%)`;
+        el.className = 'card-change down';
+        arrowEl.innerHTML = '▼';
+        arrowEl.className = 'card-arrow down';
+        allChanges.push({ product: meta.id, name: p.product, change, pct: parseFloat(pct), prev: p.previousPrice, curr: p.pricePkr, prevDate: p.previousDate });
+      } else {
+        el.textContent = '— No change';
+        el.className = 'card-change flat';
+        arrowEl.innerHTML = '—';
+        arrowEl.className = 'card-arrow flat';
+        allChanges.push({ product: meta.id, name: p.product, change: 0, pct: 0, prev: p.previousPrice, curr: p.pricePkr, prevDate: p.previousDate });
       }
-    } else if (meta.id === 'lpg') {
-      const el = document.getElementById(meta.changeId);
-      const arrowEl = document.getElementById(meta.arrowId);
+    } else {
+      // Fallback: no previous price data available
       el.textContent = '—';
       el.className = 'card-change flat';
       arrowEl.innerHTML = '—';
@@ -250,8 +244,8 @@ function renderOgraBanner(data, changes) {
   detailHtml = parts.join(' · ');
   detail.innerHTML = detailHtml;
 
-  // Date
-  const effDate = data.effectiveDate || (pakistanHistoryData && pakistanHistoryData.petrol && pakistanHistoryData.petrol.length > 0 ? pakistanHistoryData.petrol[pakistanHistoryData.petrol.length - 1].effectiveDate : null);
+  // Date - use OGRA notification date from API, or fall back to effectiveDate
+  const effDate = data.ograNotificationDate || data.effectiveDate || null;
   dateEl.textContent = effDate ? formatDate(effDate) : '—';
 }
 

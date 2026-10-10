@@ -132,10 +132,49 @@ app.get('/api/pakistan/latest', async (req, res) => {
     const data = await resp.json();
 
     // Fetch Hi-Octane prices from PSO and APL in parallel
-    const [psoOctane, aplXtron] = await Promise.all([
+    // Also fetch all 4 product histories to get previous notified prices
+    // Note: oilprices.pk returns oldest-first, so we need large limit to get recent entries
+    const [psoOctane, aplXtron, petrolHist, dieselHist, keroseneHist, lpgHist] = await Promise.all([
       scrapePSOOctane(),
-      scrapeAPLXtron()
+      scrapeAPLXtron(),
+      fetchWithTimeout('https://oilprices.pk/api/price-history?product=Petrol&limit=5000', 10000).then(r => r.json()).catch(() => []),
+      fetchWithTimeout('https://oilprices.pk/api/price-history?product=Diesel&limit=5000', 10000).then(r => r.json()).catch(() => []),
+      fetchWithTimeout('https://oilprices.pk/api/price-history?product=Kerosene&limit=5000', 10000).then(r => r.json()).catch(() => []),
+      fetchWithTimeout('https://oilprices.pk/api/price-history?product=LPG&limit=5000', 10000).then(r => r.json()).catch(() => [])
     ]);
+
+    // Build previous price map from history (second-to-last entry = previous notification)
+    const productHistories = {
+      'Motor Spirit (Petrol)': petrolHist,
+      'High Speed Diesel (HSD)': dieselHist,
+      'Superior Kerosene Oil (SKO)': keroseneHist,
+      'Liquefied Petroleum Gas (LPG)': lpgHist
+    };
+
+    // Add previousPrice and change to each product
+    data.products = data.products.map(p => {
+      const hist = productHistories[p.product];
+      if (hist && hist.length >= 2) {
+        const prev = hist[hist.length - 2];
+        const prevPrice = prev.pricePkr;
+        const change = p.pricePkr - prevPrice;
+        const pct = prevPrice > 0 ? ((change / prevPrice) * 100) : 0;
+        return {
+          ...p,
+          previousPrice: prevPrice,
+          previousDate: prev.effectiveDate,
+          change: parseFloat(change.toFixed(2)),
+          changePct: parseFloat(pct.toFixed(2))
+        };
+      }
+      return p;
+    });
+
+    // Also add OGRA notification date info for the banner
+    const lastPetrolHist = petrolHist && petrolHist.length > 0 ? petrolHist[petrolHist.length - 1] : null;
+    if (lastPetrolHist) {
+      data.ograNotificationDate = lastPetrolHist.effectiveDate;
+    }
 
     data.hiOctane = {};
 
