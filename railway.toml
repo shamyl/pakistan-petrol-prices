@@ -2,8 +2,8 @@
 builder = "nixpacks"
 
 [build.nixpacks]
-# Force fresh copy of app code on every build
-cache = false
+# Bust cache by touching files in a build step
+buildCommand = "echo 'Build $(date)' > BUILD_ID.txt && npm ci"
 
 [deploy]
 startCommand = "node server.js"
