@@ -138,11 +138,14 @@ async function loadAllData() {
 // ===== Price Cards =====
 function renderPriceCards(data) {
   const products = {
-    'Motor Spirit (Petrol)': { id: 'petrol', key: 'petrolPrice', changeId: 'petrolChange' },
-    'High Speed Diesel (HSD)': { id: 'diesel', key: 'dieselPrice', changeId: 'dieselChange' },
-    'Superior Kerosene Oil (SKO)': { id: 'kerosene', key: 'kerosenePrice', changeId: 'keroseneChange' },
-    'Liquefied Petroleum Gas (LPG)': { id: 'lpg', key: 'lpgPrice', changeId: 'lpgChange' }
+    'Motor Spirit (Petrol)': { id: 'petrol', key: 'petrolPrice', changeId: 'petrolChange', arrowId: 'petrolArrow' },
+    'High Speed Diesel (HSD)': { id: 'diesel', key: 'dieselPrice', changeId: 'dieselChange', arrowId: 'dieselArrow' },
+    'Superior Kerosene Oil (SKO)': { id: 'kerosene', key: 'kerosenePrice', changeId: 'keroseneChange', arrowId: 'keroseneArrow' },
+    'Liquefied Petroleum Gas (LPG)': { id: 'lpg', key: 'lpgPrice', changeId: 'lpgChange', arrowId: 'lpgArrow' }
   };
+
+  // Track all changes for the OGRA banner
+  const allChanges = [];
 
   data.products.forEach(p => {
     const meta = products[p.product];
@@ -159,25 +162,97 @@ function renderPriceCards(data) {
         const change = curr.pricePkr - prev.pricePkr;
         const pct = ((change / prev.pricePkr) * 100).toFixed(2);
         const el = document.getElementById(meta.changeId);
+        const arrowEl = document.getElementById(meta.arrowId);
         if (change > 0) {
           el.textContent = `▲ +${change.toFixed(2)} (${pct}%)`;
           el.className = 'card-change up';
+          arrowEl.innerHTML = '▲';
+          arrowEl.className = 'card-arrow up';
+          allChanges.push({ product: meta.id, name: p.product, change, pct, prev: prev.pricePkr, curr: curr.pricePkr });
         } else if (change < 0) {
           el.textContent = `▼ ${change.toFixed(2)} (${pct}%)`;
           el.className = 'card-change down';
+          arrowEl.innerHTML = '▼';
+          arrowEl.className = 'card-arrow down';
+          allChanges.push({ product: meta.id, name: p.product, change, pct, prev: prev.pricePkr, curr: curr.pricePkr });
         } else {
           el.textContent = '— No change';
           el.className = 'card-change flat';
+          arrowEl.innerHTML = '—';
+          arrowEl.className = 'card-arrow flat';
+          allChanges.push({ product: meta.id, name: p.product, change: 0, pct: 0, prev: prev.pricePkr, curr: curr.pricePkr });
         }
       }
     } else if (meta.id === 'lpg') {
       const el = document.getElementById(meta.changeId);
+      const arrowEl = document.getElementById(meta.arrowId);
       el.textContent = '—';
       el.className = 'card-change flat';
+      arrowEl.innerHTML = '—';
+      arrowEl.className = 'card-arrow flat';
     }
   });
 
+  // Render OGRA banner
+  renderOgraBanner(data, allChanges);
+
   document.getElementById('effectiveDate').textContent = formatDate(data.effectiveDate);
+}
+
+// ===== OGRA Update Banner =====
+function renderOgraBanner(data, changes) {
+  const banner = document.getElementById('ograBanner');
+  const detail = document.getElementById('ograBannerDetail');
+  const dateEl = document.getElementById('ograBannerDate');
+  const iconEl = document.getElementById('ograBannerIcon');
+
+  if (!changes || changes.length === 0) {
+    banner.style.display = 'none';
+    return;
+  }
+
+  banner.style.display = 'flex';
+
+  // Determine overall direction
+  const increases = changes.filter(c => c.change > 0);
+  const decreases = changes.filter(c => c.change < 0);
+  const noChanges = changes.filter(c => c.change === 0);
+
+  let bannerClass = 'no-change';
+  let icon = '📋';
+  let detailHtml = '';
+
+  if (increases.length > 0 && decreases.length === 0) {
+    bannerClass = 'increase';
+    icon = '⬆️';
+  } else if (decreases.length > 0 && increases.length === 0) {
+    bannerClass = 'decrease';
+    icon = '⬇️';
+  } else if (increases.length > 0 && decreases.length > 0) {
+    bannerClass = 'increase';
+    icon = '🔄';
+  }
+
+  banner.className = 'ogra-banner ' + bannerClass;
+  iconEl.textContent = icon;
+
+  // Build detail text
+  const parts = changes.map(c => {
+    if (c.change > 0) {
+      return `${c.product.charAt(0).toUpperCase() + c.product.slice(1)} <span class="up">+${c.change.toFixed(2)}</span>`;
+    } else if (c.change < 0) {
+      return `${c.product.charAt(0).toUpperCase() + c.product.slice(1)} <span class="down">${c.change.toFixed(2)}</span>`;
+    } else {
+      return `${c.product.charAt(0).toUpperCase() + c.product.slice(1)} <span class="flat">±0.00</span>`;
+    }
+  });
+
+  detailHtml = parts.join(' · ');
+  detail.innerHTML = detailHtml;
+
+  // Date
+  const effDate = data.effectiveDate || (pakistanHistoryData && pakistanHistoryData.petrol && pakistanHistoryData.petrol.length > 0 ? pakistanHistoryData.petrol[pakistanHistoryData.petrol.length - 1].effectiveDate : null);
+  dateEl.textContent = effDate ? formatDate(effDate) : '—';
 }
 
 // ===== Hi-Octane Cards (by company) =====
@@ -773,6 +848,9 @@ function updateLastUpdated() {
 function showError() {
   document.querySelectorAll('.card-value').forEach(el => el.textContent = 'Error');
   document.querySelectorAll('.card-change').forEach(el => { el.textContent = '—'; el.className = 'card-change flat'; });
+  document.querySelectorAll('.card-arrow').forEach(el => { el.innerHTML = '—'; el.className = 'card-arrow flat'; });
+  const banner = document.getElementById('ograBanner');
+  if (banner) banner.style.display = 'none';
 }
 
 // ===== Auto-refresh every 5 minutes =====

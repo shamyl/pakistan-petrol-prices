@@ -151,6 +151,59 @@ body {
   font-family: var(--mono);
 }
 
+/* ===== OGRA Update Banner ===== */
+.ogra-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 20px;
+  margin-bottom: 16px;
+  transition: border-color 0.3s;
+}
+
+.ogra-banner.increase { border-left: 3px solid var(--danger); }
+.ogra-banner.decrease { border-left: 3px solid var(--success); }
+.ogra-banner.no-change { border-left: 3px solid var(--text-dim); }
+
+.ogra-banner-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.ogra-banner-content {
+  flex: 1;
+}
+
+.ogra-banner-title {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.ogra-banner-detail {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.ogra-banner-detail .up { color: var(--danger); font-weight: 700; }
+.ogra-banner-detail .down { color: var(--success); font-weight: 700; }
+.ogra-banner-detail .flat { color: var(--text-dim); }
+
+.ogra-banner-date {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  text-align: right;
+  white-space: nowrap;
+}
+
 /* ===== Price Cards ===== */
 .price-cards {
   display: grid;
@@ -340,6 +393,13 @@ body {
   margin-bottom: 8px;
 }
 
+.card-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
 .card-value {
   font-size: 2rem;
   font-weight: 800;
@@ -348,6 +408,18 @@ body {
   letter-spacing: -0.02em;
   line-height: 1;
 }
+
+.card-arrow {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  display: inline-block;
+  transition: transform 0.3s;
+}
+
+.card-arrow.up { color: var(--danger); }
+.card-arrow.down { color: var(--success); }
+.card-arrow.flat { color: var(--text-dim); opacity: 0.4; }
 
 .card-unit {
   font-size: 0.7rem;

@@ -34,33 +34,55 @@
       </div>
     </header>
 
+    <!-- OGRA Update Banner -->
+    <section class="ogra-banner" id="ograBanner" style="display:none;">
+      <div class="ogra-banner-icon" id="ograBannerIcon">📋</div>
+      <div class="ogra-banner-content">
+        <div class="ogra-banner-title">OGRA Price Notification</div>
+        <div class="ogra-banner-detail" id="ograBannerDetail">—</div>
+      </div>
+      <div class="ogra-banner-date" id="ograBannerDate">—</div>
+    </section>
+
     <!-- Current Price Cards -->
     <section class="price-cards" id="priceCards">
       <div class="price-card" data-product="petrol">
         <div class="card-icon">⛽</div>
         <div class="card-label">Petrol</div>
-        <div class="card-value" id="petrolPrice">—</div>
+        <div class="card-value-row">
+          <span class="card-value" id="petrolPrice">—</span>
+          <span class="card-arrow" id="petrolArrow"></span>
+        </div>
         <div class="card-unit">PKR / litre</div>
         <div class="card-change" id="petrolChange">—</div>
       </div>
       <div class="price-card" data-product="diesel">
         <div class="card-icon">🚛</div>
         <div class="card-label">High Speed Diesel</div>
-        <div class="card-value" id="dieselPrice">—</div>
+        <div class="card-value-row">
+          <span class="card-value" id="dieselPrice">—</span>
+          <span class="card-arrow" id="dieselArrow"></span>
+        </div>
         <div class="card-unit">PKR / litre</div>
         <div class="card-change" id="dieselChange">—</div>
       </div>
       <div class="price-card" data-product="kerosene">
         <div class="card-icon">🔥</div>
         <div class="card-label">Kerosene</div>
-        <div class="card-value" id="kerosenePrice">—</div>
+        <div class="card-value-row">
+          <span class="card-value" id="kerosenePrice">—</span>
+          <span class="card-arrow" id="keroseneArrow"></span>
+        </div>
         <div class="card-unit">PKR / litre</div>
         <div class="card-change" id="keroseneChange">—</div>
       </div>
       <div class="price-card" data-product="lpg">
         <div class="card-icon">🏠</div>
         <div class="card-label">LPG</div>
-        <div class="card-value" id="lpgPrice">—</div>
+        <div class="card-value-row">
+          <span class="card-value" id="lpgPrice">—</span>
+          <span class="card-arrow" id="lpgArrow"></span>
+        </div>
         <div class="card-unit">PKR / kg</div>
         <div class="card-change" id="lpgChange">—</div>
       </div>
