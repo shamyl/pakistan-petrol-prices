@@ -99,6 +99,7 @@ async function loadAllData() {
     if (longHistoryResult.status === 'fulfilled') {
       longHistoryData = longHistoryResult.value;
       renderYearlyAnalysis(longHistoryResult.value);
+      renderPMComparison(longHistoryResult.value);
     }
     if (globalResult.status === 'fulfilled') {
       globalHistoryData = globalResult.value;
@@ -247,6 +248,49 @@ function renderOgraBanner(data, changes) {
   // Date - use OGRA notification date from API, or fall back to effectiveDate
   const effDate = data.ograNotificationDate || data.effectiveDate || null;
   dateEl.textContent = effDate ? formatDate(effDate) : '—';
+}
+
+// ===== PM vs PM Comparison =====
+function renderPMComparison(longHistory) {
+  if (!longHistory || longHistory.length === 0) return;
+
+  // Key dates and prices
+  // Imran Khan: PM Aug 18, 2018 – Apr 10, 2022
+  // Shahbaz Sharif: PM Apr 11, 2022 – present
+  const ikStartPrice = 95.24;   // Aug 2018
+  const ikEndPrice = 149.86;    // Apr 2022 (last notification under IK)
+  const ssStartPrice = 149.86;  // Apr 2022 (same notification, SS took over)
+  const currentPrice = longHistory[longHistory.length - 1]?.petrol;
+  const currentDate = longHistory[longHistory.length - 1]?.date;
+
+  // Populate IK side
+  const ikStartEl = document.getElementById('ikStartPrice');
+  const ikEndEl = document.getElementById('ikEndPrice');
+  if (ikStartEl) ikStartEl.textContent = 'Rs ' + ikStartPrice.toFixed(2);
+  if (ikEndEl) ikEndEl.textContent = 'Rs ' + ikEndPrice.toFixed(2);
+
+  // Populate SS side
+  const ssStartEl = document.getElementById('ssStartPrice');
+  const ssCurrentEl = document.getElementById('ssCurrentPrice');
+  const ssDateEl = document.getElementById('ssCurrentDate');
+  if (ssStartEl) ssStartEl.textContent = 'Rs ' + ssStartPrice.toFixed(2);
+  if (ssCurrentEl && currentPrice) ssCurrentEl.textContent = 'Rs ' + currentPrice.toFixed(2);
+  if (ssDateEl && currentDate) ssDateEl.textContent = formatDate(currentDate);
+
+  // VS change percentage
+  const changePctEl = document.getElementById('pmChangePercent');
+  if (changePctEl && currentPrice) {
+    const pct = ((currentPrice - ikStartPrice) / ikStartPrice * 100).toFixed(0);
+    changePctEl.textContent = '+' + pct + '%';
+  }
+
+  // Footnote
+  const footnoteEl = document.getElementById('pmFootnote');
+  if (footnoteEl && currentPrice) {
+    const ikIncrease = ikEndPrice - ikStartPrice;
+    const ssIncrease = currentPrice - ssStartPrice;
+    footnoteEl.textContent = `Petrol went up Rs ${ikIncrease.toFixed(2)} during IK's tenure (+${((ikIncrease/ikStartPrice)*100).toFixed(0)}%) and Rs ${ssIncrease.toFixed(2)} during SS's tenure (+${((ssIncrease/ssStartPrice)*100).toFixed(0)}%). You do the math. 🤷`;
+  }
 }
 
 // ===== Hi-Octane Cards (by company) =====

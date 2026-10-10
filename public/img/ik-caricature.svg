@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="200" height="240">
+  <!-- Imran Khan Caricature - cricket bat + PM sash -->
+  <defs>
+    <radialGradient id="ikSkin" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#e8c190"/>
+      <stop offset="100%" stop-color="#c89b6a"/>
+    </radialGradient>
+    <linearGradient id="ikShirt" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a5276"/>
+      <stop offset="100%" stop-color="#0d3b5c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Body/Shoulders -->
+  <path d="M40 200 Q40 160 100 155 Q160 160 160 200 L160 240 L40 240 Z" fill="url(#ikShirt)"/>
+  
+  <!-- PM Sash -->
+  <path d="M55 165 L145 195 L140 205 L50 175 Z" fill="#c0392b" opacity="0.85"/>
+  <text x="100" y="190" text-anchor="middle" font-family="Arial" font-size="7" fill="#ffd700" transform="rotate(-18,100,188)">PRIME MINISTER</text>
+
+  <!-- Neck -->
+  <rect x="88" y="145" width="24" height="20" fill="url(#ikSkin)"/>
+
+  <!-- Head -->
+  <ellipse cx="100" cy="100" rx="38" ry="45" fill="url(#ikSkin)"/>
+  
+  <!-- Hair (slicked back, graying) -->
+  <path d="M62 80 Q65 55 100 50 Q135 55 138 80 Q138 75 130 72 Q120 68 100 68 Q80 68 70 72 Q62 75 62 80 Z" fill="#5d4e3a"/>
+  <path d="M65 78 Q68 62 85 58" stroke="#888" stroke-width="1.5" fill="none" opacity="0.6"/>
+
+  <!-- Ears -->
+  <ellipse cx="63" cy="105" rx="6" ry="10" fill="url(#ikSkin)"/>
+  <ellipse cx="137" cy="105" rx="6" ry="10" fill="url(#ikSkin)"/>
+
+  <!-- Eyebrows (distinctive IK style) -->
+  <path d="M72 88 Q82 84 92 88" stroke="#3d3d3d" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M108 88 Q118 84 128 88" stroke="#3d3d3d" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Eyes -->
+  <ellipse cx="82" cy="98" rx="5" ry="4" fill="white"/>
+  <ellipse cx="118" cy="98" rx="5" ry="4" fill="white"/>
+  <circle cx="82" cy="98" r="2.5" fill="#2c3e50"/>
+  <circle cx="118" cy="98" r="2.5" fill="#2c3e50"/>
+  <circle cx="83" cy="97" r="0.8" fill="white"/>
+  <circle cx="119" cy="97" r="0.8" fill="white"/>
+
+  <!-- Nose (prominent) -->
+  <path d="M97 105 Q95 115 93 122 Q96 126 100 125 Q104 126 107 122 Q105 115 103 105 Z" fill="url(#ikSkin)" stroke="#a08055" stroke-width="0.5"/>
+
+  <!-- Cheek lines -->
+  <path d="M68 115 Q72 120 75 118" stroke="#c89b6a" stroke-width="1" fill="none" opacity="0.4"/>
+  <path d="M132 115 Q128 120 125 118" stroke="#c89b6a" stroke-width="1" fill="none" opacity="0.4"/>
+
+  <!-- Mouth (slight smile) -->
+  <path d="M88 132 Q100 138 112 132" stroke="#a04040" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+  <!-- Chin -->
+  <path d="M85 138 Q100 148 115 138" stroke="#c89b6a" stroke-width="0.5" fill="none" opacity="0.3"/>
+
+  <!-- Cricket Bat (signature prop) -->
+  <g transform="rotate(-15, 155, 180)">
+    <rect x="150" y="120" width="8" height="55" fill="#d4a017" rx="2"/>
+    <rect x="148" y="170" width="12" height="30" fill="#b8860b" rx="2"/>
+    <rect x="150" y="118" width="8" height="6" fill="#5d4037" rx="1"/>
+    <text x="156" y="190" text-anchor="middle" font-family="Arial" font-size="5" fill="#8B4513" font-weight="bold">IK</text>
+  </g>
+
+  <!-- Wrist -->
+  <rect x="148" y="175" width="10" height="8" fill="url(#ikSkin)"/>
+</svg>
