@@ -860,24 +860,85 @@ body {
 
 /* ===== Responsive ===== */
 @media (max-width: 900px) {
-  .price-cards { grid-template-columns: repeat(3, 1fr); }
+  .price-cards { grid-template-columns: repeat(2, 1fr); }
   .sources-grid { grid-template-columns: repeat(2, 1fr); }
   .yearly-grid { grid-template-columns: repeat(3, 1fr); }
-  .stats-bar { flex-direction: column; }
+  .stats-bar { flex-wrap: wrap; }
+  .stat-item { flex: 1 1 45%; }
+  .pm-versus { grid-template-columns: 1fr; gap: 16px; }
+  .pm-vs { padding-top: 0; flex-direction: row; justify-content: center; gap: 16px; }
+  .pm-vs-label { max-width: none; }
+  .hi-octane-cards { grid-template-columns: 1fr; }
+  .chart-header { flex-direction: column; align-items: flex-start; }
 }
 
 @media (max-width: 600px) {
+  .container { padding: 16px 12px 40px; }
   .header { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .header-right { align-items: flex-start; }
-  .price-cards { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .price-card { padding: 16px 12px; }
+  .header-right { align-items: flex-start; flex-direction: row; gap: 12px; }
+  .header h1 { font-size: 1.3rem; }
+  .subtitle { font-size: 0.78rem; }
+  .logo-icon { font-size: 2rem; }
+
+  .ogra-banner { flex-wrap: wrap; gap: 10px; padding: 12px 14px; }
+  .ogra-banner-date { text-align: left; font-size: 0.72rem; }
+  .ogra-banner-detail { font-size: 0.82rem; }
+
+  .price-cards { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .price-card { padding: 16px 12px; border-radius: 12px; }
   .card-value { font-size: 1.5rem; }
-  .yearly-grid { grid-template-columns: 1fr 1fr; }
-  .sources-grid { grid-template-columns: 1fr; }
-  .chart-tabs { flex-wrap: wrap; }
-  .tab-btn { padding: 8px 14px; font-size: 0.8rem; }
-  .chart-header { flex-direction: column; align-items: flex-start; }
+  .card-icon { font-size: 1.4rem; }
+  .card-label { font-size: 0.72rem; }
+  .card-change { font-size: 0.72rem; }
+  .card-unit { font-size: 0.65rem; }
+
+  .hi-octane-section { padding: 16px 14px; }
+  .hi-octane-header h2 { font-size: 1rem; }
+  .deregulated-badge { font-size: 0.62rem; }
+
+  .pm-comparison { padding: 20px 14px; }
+  .pm-section-title { font-size: 1rem; }
+  .pm-card { padding: 18px 14px; }
+  .pm-caricature { width: 100px; }
+  .pm-name { font-size: 1rem; }
+  .pm-price-value { font-size: 1.5rem; }
+  .pm-price-value.small { font-size: 1.1rem; }
+  .pm-vs-circle { width: 44px; height: 44px; font-size: 0.9rem; }
+  .pm-vs-change { font-size: 1.3rem; }
+  .pm-footnote { font-size: 0.7rem; }
+
+  .stats-bar { flex-direction: column; }
+  .stat-item { flex: 1 1 100%; padding: 12px 16px; }
+  .stat-value { font-size: 1rem; }
+  .stat-label { font-size: 0.65rem; }
+
+  .chart-section { padding: 16px 12px; }
+  .chart-tabs { flex-wrap: wrap; gap: 2px; }
+  .tab-btn { padding: 8px 12px; font-size: 0.78rem; }
+  .chart-header h2 { font-size: 1rem; }
   .range-buttons { flex-wrap: wrap; }
-  .chart-container { height: 320px; }
-  .header h1 { font-size: 1.4rem; }
+  .range-btn { padding: 5px 10px; font-size: 0.65rem; }
+  .chart-container { height: 300px; }
+  .chart-subtitle { font-size: 0.72rem; }
+
+  .yearly-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .yearly-card { padding: 16px 12px; }
+  .yearly-value { font-size: 1.2rem; }
+  .yearly-header { font-size: 0.68rem; }
+  .yearly-detail { font-size: 0.65rem; }
+
+  .sources-grid { grid-template-columns: 1fr; gap: 10px; }
+  .source-card { padding: 14px; }
+  .source-name { font-size: 0.85rem; }
+  .source-desc { font-size: 0.7rem; }
+
+  .footer p { font-size: 0.8rem; }
+}
+
+@media (max-width: 380px) {
+  .price-cards { grid-template-columns: 1fr; }
+  .yearly-grid { grid-template-columns: 1fr; }
+  .header-left { gap: 10px; }
+  .logo-icon { font-size: 1.6rem; }
+  .header h1 { font-size: 1.1rem; }
 }
